@@ -2,6 +2,8 @@
 
 # lazychicken.sh - A lazy simple external IP check that utilizes curl with ipchicken.com :)
 #
+# Run remotely: bash -c "$(curl -fsSL https://raw.githubusercontent.com/fuzzlove/lazychicken/main/lazychicken.sh)"
+#
 
 echo "Lazychicken.sh - By: LiquidSky"
 echo
