@@ -1,3 +1,11 @@
-# lazychicken - 1/3/2021
+# lazychicken - Whats my IP?
 
-lazychicken.sh - A lazy simple external IP check that utilizes curl with ipchicken.com
+- Example Usage: ./lazychicken.sh
+
+- Example Output:
+
+Lazychicken.sh - By: LiquidSky
+
+A lazy simple external IP check that utilizes ipchicken + curl
+
+Current IP:  199.249.*.*
