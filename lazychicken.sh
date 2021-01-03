@@ -9,7 +9,7 @@ IP1=$(curl -s https://ipchicken.com | grep -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][
 IP2=$(curl -s https://icanhazip.com/)
 IP3=$(curl -s https://torguard.net/whats-my-ip.php | grep -m 2 -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" | sort -u | head -1)
 
-echo "[*] Checking IP from multiple sources:"
+echo "[*] Checking External IP from multiple sources:"
 echo
 echo -e "\033[31m [1] IP Chicken: \e[0m $IP1"
 echo
