@@ -1,148 +1,427 @@
-#!/bin/bash
-#
-# Run remotely: bash -c "$(curl -fsSL https://raw.githubusercontent.com/fuzzlove/lazychicken/main/lazychicken.sh)"
-#
-# This tool is designed to grab the currrent external ip configuration, and check external connectivity.
-# Requirements: netcat, curl, ifconfig, ip, whois, bash
-#
-# It would be recommended to run a full update if using kali.
-#
+# 🐔 LazyChicken
 
-# IP Lookups (3 Sources ipchicken, icanhazip, and torguard)
-#
-# Networking tool for S3 by Joseph McPeters (liquidsky)
-#
-IP1=$(curl -s https://ipchicken.com | grep -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" | sort -u | head -1)
-IP2=$(curl -s https://icanhazip.com/)
-IP3=$(curl -s https://torguard.net/whats-my-ip.php | grep -m 2 -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" | sort -u | head -1)
+> A lightweight Bash-based public IP, VPN, DNS, IPv6, and network sanity-check utility.
 
-echo "+-----------------------------------------------"
-echo
-echo -e "[*] \e[1;34m WHOIS Information: \e[0m"
-echo
-echo "+-----------------------------------------------"
+LazyChicken queries multiple trusted public services to help you quickly verify your public IP, check for IPv6 exposure, compare provider responses, inspect DNS configuration, perform ASN/GeoIP lookups, and gather basic network diagnostics from a single script.
 
-# Function 1. Check if whois is installed - then whois external IP
-if ! command -v whois &> /dev/null
-then
-    echo "[!] WHOIS could not be found"
-    echo
-    echo "Suggestion/Fix: sudo apt install whois"
-    exit
-fi
-whois $IP1
-# If ipchicken is blocked use the below options.
+---
 
-# whois $IP2
-# whois $IP3
+## 🚀 Quick Start
 
-# Basic External IP Output
-echo
-echo "+-----------------------------------------------"
-echo
-echo -e "[*] \e[1;34m Checking External IP from multiple sources: \e[0m"
-echo
-echo "+-----------------------------------------------"
-echo -e "[1] \033[31m IP Chicken: \e[0m $IP1"
-echo
-echo -e "[2] \033[31m Icanhazip: \e[0m $IP2"
-echo
-echo -e "[3] \033[31m Torguard: \e[0m $IP3"
-echo
-echo -e "[!] \e[1;34m Done \e[0m"
-echo
-echo "+-----------------------------------------------"
-echo
-echo -e "[*] \e[1;34m Internal IP Configuration: \e[0m"
-echo
-echo "+-----------------------------------------------"
-echo
+### Run Directly From GitHub
 
-# Function 2. Check if ifconfig is installed - then run.
-if ! command -v ifconfig &> /dev/null
-then
-    echo "[!] IFCONFIG command could not be found"
-    exit
-fi
-echo -e "[1] \033[31m ~ Ifconfig ~: \e[0m"
-ifconfig
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/fuzzlove/lazychicken/main/lazychicken.sh)"
+```
 
-# Function 3. Check if ip command is installed then run
-if ! command -v ip &> /dev/null
-then
-    echo "[!] IP command could not be found"
-    exit
-fi
-echo -e "[1] \033[31m ~ IP ~: \e[0m"
-ip a
+### Clone and Run Locally
 
-echo "+-----------------------------------------------"
-echo
-echo -e "[*] \e[1;34m Basic Network Checks (To See if Blocked): \e[0m"
-echo
-echo "+-----------------------------------------------"
+```bash
+git clone https://github.com/fuzzlove/lazychicken.git
+cd lazychicken
+chmod +x lazychicken.sh
+./lazychicken.sh
+```
 
+---
 
-# Function 4. Check if wget is available and then run it.
+# ✨ Features
 
-if ! command -v wget &> /dev/null
-then
-    echo "[!] wget command could not be found"
-    exit
-fi
+## 🌎 Multi-Source Public IP Detection
 
-# Function 5.
-# As an alternative to wget check if netcat is available then run it.
-# Checking connectivity to google, and s3security.com
+Queries multiple providers and compares results:
 
-if ! command -v nc &> /dev/null
-then
-    echo "[!] Netcat command could not be found"
-    exit
-fi
+- IP Chicken
+- Icanhazip
+- Ipify
+- Ifconfig.me
+- Ident.me
+- AWS CheckIP
+- TorGuard
 
-echo -e "[1] \033[31m Starting with GOOGLE\e[0m"
+This reduces dependence on any single source.
 
-# WGET GOOGLE
-wget -q --spider http://google.com
+---
 
-if [ $? -eq 0 ]; then
-    echo -e "This box \e[46mCAN\e[0m reach google (via wget)"
-else
-    echo -e "This box can \e[46mNOT\e[0m connect to google. (via wget)"
-fi
+## 🔍 Consensus Verification
 
-# NC GOOGLE
-echo -e "GET http://google.com HTTP/1.0\n\n" | nc google.com 80 > /dev/null 2>&1
+LazyChicken counts how many services report each IP address.
 
-if [ $? -eq 0 ]; then
-    echo -e "This box \e[46mCAN\e[0m reach google. (via netcat)"
-else
-    echo -e "This box can \e[46mNOT\e[0m connect to google. (via netcat)"
-    echo "The network appears to be segmented from this check."
-    
-fi
+Example:
 
-# WGET S3
-echo -e "[1] \033[31m Trying S3Security.com \e[0m"
-wget -q --spider http://s3security.com
+```text
+8 source(s) reported: 203.0.113.15
+2 source(s) reported: 2001:db8::1
+```
 
-if [ $? -eq 0 ]; then
-    echo -e "This box \e[46mCAN\e[0m reach s3security.com (via wget)"
-else
-    echo -e "This box can \e[46mNOT\e[0m connect to s3security.com. (via wget)"
-    echo "The network appears to be segmented from this check."
-fi
+Useful for identifying:
 
-# NC S3
-echo -e "GET http://s3security.com HTTP/1.0\n\n" | nc s3security.com 80 > /dev/null 2>&1
+- VPN inconsistencies
+- Proxy anomalies
+- Endpoint failures
+- IPv4/IPv6 differences
 
-if [ $? -eq 0 ]; then
-    echo -e "This box \e[46mCAN\e[0m reach s3security.com. (via netcat)"
-else
-    echo -e "This box can \e[46mNOT\e[0m connect to s3security.com. (via netcat)"
-    echo "The network appears to be segmented from this check."
-fi
+---
 
-echo
-echo -e "[!] \e[1m\e[3m\e[31mDONE WITH ALL CHECKS\e[0m"
+## 🌐 IPv6 Detection
+
+Checks for IPv6 connectivity and warns if IPv6 is active.
+
+Example:
+
+```text
+IPv6 is active. Make sure your VPN/proxy protects IPv6 traffic.
+```
+
+Helpful for detecting IPv6 leaks.
+
+---
+
+## ⚡ Response Time Measurements
+
+Each source is timed individually.
+
+Example:
+
+```text
+IP Chicken       320ms
+Ipify             41ms
+Ident.me          37ms
+```
+
+LazyChicken ranks providers and identifies the fastest responder.
+
+---
+
+## 🕵️ User-Agent Consistency Testing
+
+Tests multiple User-Agent strings against a public IP endpoint.
+
+Examples:
+
+```text
+curl/8.0.1
+Mozilla/5.0
+Mozilla/5.0 (Macintosh)
+Mozilla/5.0 (Linux)
+LazyChicken/1.0
+```
+
+Verifies whether different User-Agent headers produce different public IP results.
+
+---
+
+## 🏢 ASN / ISP Lookup
+
+Attempts to identify:
+
+- Autonomous System Number (ASN)
+- ISP
+- Organization
+
+Example:
+
+```text
+ASN: AS12345
+Org: Example VPN Inc.
+```
+
+Useful for confirming that traffic exits through the expected provider.
+
+---
+
+## 📍 GeoIP Lookup
+
+Attempts to determine:
+
+- Country
+- Region
+- City
+
+Example:
+
+```text
+Country: United States
+Region: Texas
+City: Dallas
+```
+
+Helpful when validating VPN exit locations.
+
+---
+
+## 🧠 DNS Resolver Inspection
+
+Displays locally configured DNS resolvers.
+
+### macOS
+
+```bash
+scutil --dns
+```
+
+### Linux
+
+```bash
+resolvectl dns
+```
+
+or
+
+```bash
+cat /etc/resolv.conf
+```
+
+Useful for:
+
+- DNS troubleshooting
+- DNS leak detection
+- VPN verification
+
+---
+
+## 🌐 External DNS Verification
+
+If `dig` is installed, LazyChicken performs an external DNS diagnostic query.
+
+This can reveal:
+
+- Which resolver is being used
+- Potential DNS leaks
+- DNS forwarding behavior
+
+---
+
+## 🔒 HTTPS / TLS Sanity Check
+
+Queries Cloudflare diagnostic endpoints to gather:
+
+- Public IP seen by Cloudflare
+- TLS version
+- HTTP version
+- Cloudflare data center (colo)
+
+Example:
+
+```text
+Cloudflare saw IP: 203.0.113.15
+TLS: TLSv1.3
+HTTP: HTTP/3
+Colo: DFW
+```
+
+Useful for spotting:
+
+- Proxy behavior
+- VPN routing differences
+- TLS anomalies
+
+---
+
+## 🎨 Universal Terminal Colors
+
+LazyChicken now uses:
+
+```bash
+tput
+```
+
+instead of hardcoded ANSI escape sequences.
+
+Benefits:
+
+- Better macOS compatibility
+- Better Linux compatibility
+- Better SSH compatibility
+- Graceful fallback when colors are unavailable
+
+Supported terminals include:
+
+- macOS Terminal
+- iTerm2
+- GNOME Terminal
+- Konsole
+- Alacritty
+- Kitty
+- Most ANSI-compatible terminals
+
+---
+
+## 🙏 Source Credits
+
+At the end of every run, LazyChicken displays:
+
+```text
+Brought to you by the following sources:
+```
+
+and lists all services used during execution.
+
+Special thanks to the maintainers and operators of these free public services.
+
+---
+
+# 📋 Requirements
+
+## Required
+
+```bash
+bash
+curl
+grep
+awk
+sort
+head
+sed
+```
+
+## Optional (Recommended)
+
+```bash
+dig
+tput
+scutil
+resolvectl
+```
+
+### macOS
+
+Typically available by default:
+
+```bash
+curl
+awk
+sed
+grep
+scutil
+```
+
+### Linux
+
+You may need:
+
+```bash
+sudo apt install dnsutils
+```
+
+or
+
+```bash
+sudo dnf install bind-utils
+```
+
+for `dig`.
+
+---
+
+# 🧪 Example Use Cases
+
+### Verify VPN Exit Node
+
+Confirm:
+
+- Public IP
+- ASN
+- ISP
+- Country
+
+---
+
+### Check for IPv6 Leaks
+
+Determine whether:
+
+- IPv6 is active
+- VPN protects IPv6
+
+---
+
+### Validate DNS Configuration
+
+View:
+
+- Local resolvers
+- External resolver behavior
+
+---
+
+### Compare Public IP Providers
+
+See whether:
+
+- All providers agree
+- Some providers disagree
+- Endpoints are reachable
+
+---
+
+### Benchmark Public IP Services
+
+Compare response times across providers.
+
+---
+
+# 📄 Example Output
+
+```text
+[*] Checking public IP from multiple sources...
+
+[1] IP Chicken          203.0.113.15
+    Response time: 310ms
+
+[2] Ipify IPv4          203.0.113.15
+    Response time: 42ms
+
+[*] Consensus Check:
+
+8 source(s) reported: 203.0.113.15
+
+[*] Fastest Source Ranking:
+
+Ipify IPv4     42ms
+Ident.me       51ms
+AWS CheckIP    73ms
+
+Fastest responder: Ipify IPv4 at 42ms
+
+[*] ASN / ISP / GeoIP Lookup:
+
+ASN: AS12345
+Org: Example VPN
+Country: United States
+Region: Texas
+City: Dallas
+
+[!] Done
+```
+
+---
+
+# ⚠ Disclaimer
+
+LazyChicken is intended for informational and diagnostic purposes.
+
+Results may vary depending on:
+
+- VPN provider
+- Proxy configuration
+- ISP routing
+- CDN behavior
+- GeoIP database accuracy
+- DNS configuration
+
+Public IP, ASN, DNS, and geolocation data are obtained from third-party services and may occasionally be inaccurate or inconsistent.
+
+---
+
+# ❤️ Contributing
+
+Contributions, bug reports, feature requests, and pull requests are welcome.
+
+If you'd like to add new diagnostic providers, improve platform compatibility, or contribute additional network checks, feel free to open an issue or submit a pull request.
+
+---
+
+# 🐓 LazyChicken
+
+**Fast. Lightweight. Multi-source. No nonsense.**
