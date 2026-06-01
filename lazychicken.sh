@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Please see the readme: https://github.com/fuzzlove/lazychicken
+# bash -c "$(curl -fsSL https://raw.githubusercontent.com/fuzzlove/lazychicken/main/lazychicken.sh)"
+
 set -u
 
 # ---------- Colors ----------
